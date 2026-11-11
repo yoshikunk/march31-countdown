@@ -1,0 +1,344 @@
+
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#183e56">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="あと何日">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="icon" href="./icon.svg" type="image/svg+xml">
+  <title>3月31日まで、あと何日。</title>
+  <style>
+    :root{font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN",sans-serif;color:#1c3445;background:#f1f5f7}
+    *{box-sizing:border-box}
+    body{margin:0}
+    main{max-width:520px;margin:auto;padding:24px 18px 70px;padding-top:max(24px,env(safe-area-inset-top))}
+    h1{font-size:24px;margin:10px 0 4px}
+    h2{font-size:17px;margin:0 0 14px}
+    p{line-height:1.65}
+    .muted{color:#627786;font-size:13px}
+    .card{background:#fff;border-radius:20px;padding:20px;margin:15px 0;box-shadow:0 3px 15px #163a5010}
+    .hero{background:#183e56;color:white;text-align:center;padding:29px 18px}
+    .hero .muted{color:#d4e4ed}
+    .number{font-size:clamp(64px,16vw,94px);font-weight:800;line-height:1.2;font-variant-numeric:tabular-nums;letter-spacing:-4px}
+    .number small{font-size:22px;letter-spacing:0;margin-left:6px}
+    .row{display:flex;justify-content:space-between;align-items:center;gap:12px}
+    .stat{font-size:28px;font-weight:750;font-variant-numeric:tabular-nums}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .grid .card{margin:0}
+    .track{background:#d8e3e9;height:11px;border-radius:99px;overflow:hidden}
+    .bar{background:#74b7aa;height:100%;width:0%;border-radius:99px}
+    input,select,button{font:inherit;border-radius:11px;padding:11px;max-width:100%}
+    input,select{border:1px solid #c9d5dc;background:white;color:#1c3445}
+    input[type=number]{width:88px}
+    button{border:0;background:#183e56;color:white;cursor:pointer;font-weight:600}
+    button.secondary{background:#e7eef2;color:#25475c}
+    button.small{padding:7px 10px;font-size:12px}
+    .form{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}
+    .form input{flex:2;min-width:145px}
+    .form select{flex:1;min-width:105px}
+    .form button{width:100%}
+    .leave{display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #e9eff2;padding:9px 0;font-size:14px;gap:10px}
+    .leave:last-child{border-bottom:0}
+    .months{display:grid;grid-template-columns:repeat(5,1fr);text-align:center;gap:4px}
+    .monthnum{font-weight:750;font-size:23px}
+    .mbar{height:55px;display:flex;align-items:end;justify-content:center}
+    .mbar div{background:#74b7aa;width:65%;border-radius:5px 5px 0 0;min-height:3px}
+    .message{font-size:12px;color:#526d7d;min-height:17px}
+  </style>
+</head>
+<body>
+<main>
+  <div class="muted">2027年3月31日まで</div>
+  <h1>あと何日。</h1>
+  <p class="muted" id="todayLabel">日本時間で自動更新</p>
+
+  <section class="card hero">
+    <div class="muted">これから学校へ行く予定の日</div>
+    <div class="number" id="remaining">--<small>日</small></div>
+    <p class="muted">登録したお休みを除いた日数です</p>
+    <div class="track"><div class="bar" id="progress"></div></div>
+    <p class="muted" id="progressLabel"></p>
+  </section>
+
+  <div class="grid">
+    <section class="card">
+      <div class="muted">休暇を除く前</div>
+      <div class="stat" id="base">--日</div>
+    </section>
+    <section class="card">
+      <div class="muted">年度末までの暦日</div>
+      <div class="stat" id="calendar">--日</div>
+    </section>
+  </div>
+
+  <section class="card">
+    <h2>年休を使ったら</h2>
+    <div class="row">
+      <label for="budget" class="muted">使える年休の合計</label>
+      <input type="number" min="0" max="100" id="budget" value="39">
+    </div>
+    <p class="muted">初期値39日は11月11日を基準とした仮定です。11月13日の登録分も含みます。正確な付与・残日数に合わせて変更してください。</p>
+    <div class="row">
+      <span>すべて取得した場合</span>
+      <strong class="stat" id="minimum">--日</strong>
+    </div>
+    <p class="muted" id="budgetNote"></p>
+  </section>
+
+  <section class="card">
+    <h2>月別の残り出勤日数</h2>
+    <div class="months" id="months"></div>
+  </section>
+
+  <section class="card">
+    <h2>お休みの登録</h2>
+    <p class="muted">年休、健康診断、その他の休みを登録すると、残りの日数に反映されます。</p>
+    <div class="form">
+      <input type="date" id="leaveDate" min="2026-11-11" max="2027-03-31">
+      <select id="leaveType">
+        <option value="年休">年休</option>
+        <option value="人間ドック">人間ドック</option>
+        <option value="その他の休暇">その他の休暇</option>
+      </select>
+      <button id="addLeave">休みを追加する</button>
+    </div>
+    <div class="message" id="message" role="status"></div>
+    <div id="leaveList"></div>
+  </section>
+
+  <section class="card" style="text-align:center;background:#e6f1ef">
+    <strong id="encouragement">今日が終われば、また一日減ります。</strong>
+    <p class="muted">休む日も、前に進む一日です。</p>
+  </section>
+
+  <p class="muted">土日・国民の祝日・12月29日〜1月3日を除いて計算します。学校固有の勤務日や振替休日は別途調整が必要です。年休・休暇は正式な承認を前提とした計画用です。</p>
+</main>
+
+<script>
+(() => {
+  "use strict";
+
+  const END = "2027-03-31";
+  const START = "2026-11-09";
+  const HOLIDAYS = new Set([
+    "2026-11-23",
+    "2027-01-01",
+    "2027-01-11",
+    "2027-02-11",
+    "2027-02-23",
+    "2027-03-22"
+  ]);
+  const DEFAULT_LEAVES = {
+    "2026-11-12": "人間ドック",
+    "2026-11-13": "年休"
+  };
+  const KEY = "march31-countdown-v1";
+  const $ = id => document.getElementById(id);
+
+  let leaves = { ...DEFAULT_LEAVES };
+  let budget = 39;
+
+  try {
+    const saved = JSON.parse(localStorage.getItem(KEY) || "null");
+    if (saved) {
+      leaves = saved.leaves || leaves;
+      budget = Number.isFinite(saved.budget) ? saved.budget : 39;
+    }
+  } catch (_) {}
+
+  function save() {
+    try {
+      localStorage.setItem(KEY, JSON.stringify({ leaves, budget }));
+    } catch (_) {}
+  }
+
+  // 日付の計算はUTCで行い、時差によるずれを防止。
+  function dateOf(s) {
+    return new Date(s + "T12:00:00Z");
+  }
+
+  function addDays(s, count) {
+    const d = dateOf(s);
+    d.setUTCDate(d.getUTCDate() + count);
+    return d.toISOString().slice(0, 10);
+  }
+
+  function tokyoToday() {
+    return new Intl.DateTimeFormat("sv-SE", {
+      timeZone: "Asia/Tokyo",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit"
+    }).format(new Date());
+  }
+
+  function isWorkday(s) {
+    const weekday = dateOf(s).getUTCDay();
+    return weekday !== 0 && weekday !== 6 &&
+      !HOLIDAYS.has(s) &&
+      !(s >= "2026-12-29" && s <= "2027-01-03");
+  }
+
+  function workdays(from, through) {
+    const days = [];
+    for (let d = from; d <= through; d = addDays(d, 1)) {
+      if (isWorkday(d)) days.push(d);
+    }
+    return days;
+  }
+
+  function dayDiff(from, to) {
+    return Math.max(0, Math.round(
+      (dateOf(to) - dateOf(from)) / 86400000
+    ));
+  }
+
+  function japaneseDate(s) {
+    const [, m, d] = s.split("-");
+    return Number(m) + "月" + Number(d) + "日";
+  }
+
+  function render() {
+    const today = tokyoToday();
+    const upcoming = today >= END
+      ? []
+      : workdays(addDays(today, 1), END);
+
+    const remaining = upcoming.filter(d => !leaves[d]);
+    const futureAnnual = upcoming.filter(d => leaves[d] === "年休").length;
+    const allAnnual = Object.keys(leaves).filter(d =>
+      d >= "2026-11-11" &&
+      d <= END &&
+      isWorkday(d) &&
+      leaves[d] === "年休"
+    ).length;
+
+    const additionalAnnual = Math.max(0, budget - allAnnual);
+    const minimum = Math.max(0, remaining.length - additionalAnnual);
+
+    $("todayLabel").textContent =
+      "今日は " + new Intl.DateTimeFormat("ja-JP", {
+        timeZone: "Asia/Tokyo",
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+        weekday: "long"
+      }).format(new Date());
+
+    $("remaining").innerHTML =
+      remaining.length + "<small>日</small>";
+    $("base").textContent = upcoming.length + "日";
+    $("calendar").textContent = dayDiff(today, END) + "日";
+    $("minimum").textContent = minimum + "日";
+    $("budget").value = budget;
+    $("budgetNote").textContent =
+      "今後登録済みの年休 " + futureAnnual +
+      "日。さらに使える年休の見込み " +
+      additionalAnnual + "日。";
+
+    const total = workdays(START, END).length;
+    const done = today < START ? 0 :
+      today >= END ? total :
+      workdays(START, today).length;
+    const percent = Math.round(done / total * 100);
+    $("progress").style.width = percent + "%";
+    $("progressLabel").textContent =
+      "年度末に向けて " + percent + "% 経過";
+
+    const months = [
+      ["11月", "2026-11"],
+      ["12月", "2026-12"],
+      ["1月", "2027-01"],
+      ["2月", "2027-02"],
+      ["3月", "2027-03"]
+    ].map(([label, prefix]) => ({
+      label,
+      count: remaining.filter(d => d.startsWith(prefix)).length
+    }));
+    const max = Math.max(1, ...months.map(m => m.count));
+    $("months").innerHTML = months.map(m => `
+      <div>
+        <div class="monthnum">${m.count}</div>
+        <div class="mbar"><div style="height:${Math.max(3, Math.round(m.count/max*50))}px"></div></div>
+        <div class="muted">${m.label}</div>
+      </div>
+    `).join("");
+
+    const futureLeaves = Object.keys(leaves)
+      .filter(d => d > today && d <= END)
+      .sort();
+
+    $("leaveList").innerHTML = futureLeaves.map(d => `
+      <div class="leave">
+        <span>${japaneseDate(d)}・${leaves[d]}</span>
+        <button class="secondary small" data-date="${d}">取り消す</button>
+      </div>
+    `).join("");
+
+    $("encouragement").textContent = today >= END
+      ? "ここまで、本当にお疲れさまでした。"
+      : remaining.length === 0
+      ? "もう、予定された出勤日はありません。"
+      : "今日が終われば、また一日減ります。";
+  }
+
+  $("budget").addEventListener("change", e => {
+    budget = Math.min(100, Math.max(0, Number(e.target.value) || 0));
+    save();
+    render();
+  });
+
+  $("leaveDate").value = addDays(tokyoToday(), 1);
+
+  $("addLeave").addEventListener("click", () => {
+    const d = $("leaveDate").value;
+    const type = $("leaveType").value;
+
+    if (!d || d <= tokyoToday() || d > END) {
+      $("message").textContent =
+        "明日から2027年3月31日までの日付を選んでください。";
+      return;
+    }
+    if (!isWorkday(d)) {
+      $("message").textContent =
+        "その日はもともと休日です。";
+      return;
+    }
+    leaves[d] = type;
+    $("message").textContent =
+      japaneseDate(d) + "の休みを登録しました。";
+    save();
+    render();
+  });
+
+  $("leaveList").addEventListener("click", e => {
+    const button = e.target.closest("button[data-date]");
+    if (!button) return;
+    delete leaves[button.dataset.date];
+    save();
+    render();
+  });
+
+  render();
+
+  // ホーム画面で開いたまま日付が変わった場合も再計算。
+  document.addEventListener("visibilitychange", () => {
+    if (!document.hidden) render();
+  });
+  window.addEventListener("focus", render);
+  setInterval(render, 60000);
+
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => {
+      navigator.serviceWorker.register("./sw.js")
+        .catch(err => console.warn("Offline registration:", err));
+    });
+  }
+})();
+</script>
+</body>
+</html>
