@@ -1,0 +1,20 @@
+
+{
+  "name": "3月31日まで、あと何日。",
+  "short_name": "あと何日",
+  "description": "2027年3月31日までの残り出勤日数を数えるアプリ",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f1f5f7",
+  "theme_color": "#183e56",
+  "lang": "ja",
+  "icons": [
+    {
+      "src": "./icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
